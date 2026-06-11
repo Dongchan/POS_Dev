@@ -10,6 +10,8 @@ type SettingsPanelProps = {
   onClosedChange: (closed: boolean) => void;
   orders: Order[];
   onDeleteOrders: (ids: string[]) => Promise<void>;
+  isPinEnabled: boolean;
+  onLock: () => void;
 };
 
 export function SettingsPanel({
@@ -22,6 +24,8 @@ export function SettingsPanel({
   onClosedChange,
   orders,
   onDeleteOrders,
+  isPinEnabled,
+  onLock,
 }: SettingsPanelProps) {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "미설정";
   const testOrderCount = orders.filter((order) => order.isTest).length;
@@ -80,6 +84,16 @@ export function SettingsPanel({
             {storageError ? <em className="error-text">{storageError}</em> : null}
           </div>
           <span className="muted-text">{storageMode === "firebase" ? "실시간 동기화" : "환경변수 없음"}</span>
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <strong>앱 잠금</strong>
+            <span>{isPinEnabled ? "PIN 잠금 사용 중" : "VITE_APP_PIN이 없어 잠금이 꺼져 있습니다."}</span>
+          </div>
+          <button type="button" onClick={onLock} disabled={!isPinEnabled}>
+            잠그기
+          </button>
         </div>
       </div>
 

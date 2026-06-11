@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { BottomNav, type AppTab } from "./components/BottomNav";
+import { isPinEnabled, PinGate } from "./components/PinGate";
 import { OrderEntry } from "./features/order/OrderEntry";
 import { getTodayBusinessDate } from "./features/order/orderUtils";
 import { OpenOrdersBoard } from "./features/queue/OpenOrdersBoard";
@@ -8,6 +9,7 @@ import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { useOrders } from "./hooks/useOrders";
 
 const TEST_MODE_KEY = "pocha-pos:test-mode";
+const PIN_UNLOCK_KEY = "pocha-pos:pin-unlocked";
 
 function readBoolean(key: string, defaultValue = false) {
   return window.localStorage.getItem(key) ? window.localStorage.getItem(key) === "true" : defaultValue;
@@ -20,6 +22,7 @@ function closedKey(businessDate: string) {
 export default function App() {
   const businessDate = getTodayBusinessDate();
   const [activeTab, setActiveTab] = useState<AppTab>("order");
+  const [isUnlocked, setIsUnlocked] = useState(() => !isPinEnabled() || window.sessionStorage.getItem(PIN_UNLOCK_KEY) === "true");
   const [isTestMode, setIsTestModeState] = useState(() => readBoolean(TEST_MODE_KEY));
   const [isClosed, setIsClosedState] = useState(() => readBoolean(closedKey(businessDate)));
   const { orders, storageMode, storageError, saveOrder, updateOrder, deleteOrders } = useOrders(businessDate);
@@ -45,6 +48,15 @@ export default function App() {
       setActiveTab("summary");
     }
   };
+
+  const lockApp = () => {
+    window.sessionStorage.removeItem(PIN_UNLOCK_KEY);
+    setIsUnlocked(false);
+  };
+
+  if (!isUnlocked) {
+    return <PinGate onUnlock={() => setIsUnlocked(true)} />;
+  }
 
   return (
     <div className="app-shell">
@@ -100,6 +112,8 @@ export default function App() {
             onClosedChange={setIsClosed}
             orders={orders}
             onDeleteOrders={deleteOrders}
+            isPinEnabled={isPinEnabled()}
+            onLock={lockApp}
           />
         </div>
       </main>

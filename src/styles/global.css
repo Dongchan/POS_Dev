@@ -43,6 +43,57 @@ button {
   padding-bottom: calc(82px + env(safe-area-inset-bottom));
 }
 
+.pin-screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #111827;
+}
+
+.pin-card {
+  display: grid;
+  width: min(420px, 100%);
+  gap: 18px;
+  padding: 28px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.pin-card h1,
+.pin-card p {
+  margin: 0;
+}
+
+.pin-card h1 {
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.pin-card label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pin-card input {
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 14px;
+  color: var(--ink);
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.pin-action {
+  width: 100%;
+  margin: 0;
+}
+
 .app-header {
   position: sticky;
   top: 0;
