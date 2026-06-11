@@ -16,6 +16,7 @@ const filters: Array<{ value: OrderStatus; label: string }> = [
 export function OpenOrdersBoard({ orders, onUpdate }: OpenOrdersBoardProps) {
   const [filter, setFilter] = useState<OrderStatus>("open");
   const [now, setNow] = useState(Date.now());
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
@@ -31,29 +32,44 @@ export function OpenOrdersBoard({ orders, onUpdate }: OpenOrdersBoardProps) {
 
   const markServed = async (order: Order) => {
     const timestamp = Date.now();
-    await onUpdate(order.id, {
-      status: "served",
-      updatedAt: timestamp,
-      servedAt: timestamp,
-    });
+    try {
+      setActionError("");
+      await onUpdate(order.id, {
+        status: "served",
+        updatedAt: timestamp,
+        servedAt: timestamp,
+      });
+    } catch (error) {
+      setActionError(getActionErrorMessage(error));
+    }
   };
 
   const markPaid = async (order: Order, paymentMethod: Exclude<PaymentMethod, "unpaid">) => {
-    await onUpdate(order.id, {
-      paymentMethod,
-      paymentStatus: "paid",
-      updatedAt: Date.now(),
-    });
+    try {
+      setActionError("");
+      await onUpdate(order.id, {
+        paymentMethod,
+        paymentStatus: "paid",
+        updatedAt: Date.now(),
+      });
+    } catch (error) {
+      setActionError(getActionErrorMessage(error));
+    }
   };
 
   const cancelOrder = async (order: Order) => {
     if (!window.confirm(`${order.orderNo} 주문을 취소할까요?`)) return;
     const timestamp = Date.now();
-    await onUpdate(order.id, {
-      status: "cancelled",
-      updatedAt: timestamp,
-      cancelledAt: timestamp,
-    });
+    try {
+      setActionError("");
+      await onUpdate(order.id, {
+        status: "cancelled",
+        updatedAt: timestamp,
+        cancelledAt: timestamp,
+      });
+    } catch (error) {
+      setActionError(getActionErrorMessage(error));
+    }
   };
 
   return (
@@ -82,6 +98,8 @@ export function OpenOrdersBoard({ orders, onUpdate }: OpenOrdersBoardProps) {
         ))}
       </div>
 
+      {actionError ? <div className="notice danger">{actionError}</div> : null}
+
       <div className="order-list">
         {filteredOrders.length ? (
           filteredOrders.map((order) => (
@@ -102,6 +120,17 @@ export function OpenOrdersBoard({ orders, onUpdate }: OpenOrdersBoardProps) {
       </div>
     </section>
   );
+}
+
+function getActionErrorMessage(error: unknown) {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  const lowerMessage = rawMessage.toLowerCase();
+
+  if (lowerMessage.includes("permission") || lowerMessage.includes("insufficient")) {
+    return "상태 변경 권한이 없습니다. Firebase Firestore Rules를 확인하세요.";
+  }
+
+  return `상태 변경에 실패했습니다: ${rawMessage}`;
 }
 
 type OrderCardProps = {

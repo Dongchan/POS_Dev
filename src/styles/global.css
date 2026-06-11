@@ -205,6 +205,11 @@ button {
   background: #ffe2df;
 }
 
+.notice.success {
+  color: #0e6b4c;
+  background: #d9f8eb;
+}
+
 .segmented {
   display: grid;
   grid-auto-columns: 1fr;

@@ -72,6 +72,7 @@ export default function App() {
             orders={orders}
             isTestMode={isTestMode}
             isClosed={isClosed}
+            storageError={storageError}
             onSave={saveOrder}
           />
           <OpenOrdersBoard orders={orders} onUpdate={updateOrder} />

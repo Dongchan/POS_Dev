@@ -13,6 +13,7 @@ type OrderEntryProps = {
   orders: Order[];
   isTestMode: boolean;
   isClosed: boolean;
+  storageError: string;
   onSave: (order: Order) => Promise<void>;
 };
 
@@ -22,13 +23,15 @@ const paymentOptions: Array<{ value: PaymentMethod; label: string }> = [
   { value: "unpaid", label: "미결제" },
 ];
 
-export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave }: OrderEntryProps) {
+export function OrderEntry({ businessDate, orders, isTestMode, isClosed, storageError, onSave }: OrderEntryProps) {
   const [category, setCategory] = useState<MenuCategory>("food");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerMemo, setCustomerMemo] = useState("");
   const [customerColor, setCustomerColor] = useState<CustomerColor>("yellow");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const filteredMenu = useMemo(
     () => menuItems.filter((item) => item.category === category).sort((a, b) => a.sortOrder - b.sortOrder),
@@ -39,6 +42,8 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave 
   const nextOrderNo = getNextOrderNo(orders);
 
   const addItem = (item: MenuItem) => {
+    setSaveError("");
+    setSuccessMessage("");
     setCart((current) => {
       const existing = current.find((line) => line.item.id === item.id);
       if (existing) {
@@ -58,6 +63,8 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave 
 
   const submitOrder = async () => {
     if (!cart.length || isSaving || isClosed) return;
+    setSaveError("");
+    setSuccessMessage("");
 
     const now = Date.now();
     const items: OrderItem[] = cart.map(({ item, quantity }) => ({
@@ -92,6 +99,9 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave 
       setCart([]);
       setCustomerMemo("");
       setPaymentMethod("card");
+      setSuccessMessage(`${order.orderNo} 주문이 등록되었습니다.`);
+    } catch (error) {
+      setSaveError(getSaveErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -110,6 +120,9 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave 
       {isClosed ? (
         <div className="notice danger">오늘 영업이 마감되었습니다. 설정에서 영업을 재개하면 주문을 받을 수 있습니다.</div>
       ) : null}
+      {storageError ? <div className="notice danger">Firebase 연결 오류: {storageError}</div> : null}
+      {saveError ? <div className="notice danger">{saveError}</div> : null}
+      {successMessage ? <div className="notice success">{successMessage}</div> : null}
 
       <div className="segmented" role="tablist" aria-label="메뉴 카테고리">
         <button className={category === "food" ? "active" : ""} type="button" onClick={() => setCategory("food")}>
@@ -209,4 +222,23 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, onSave 
       </button>
     </section>
   );
+}
+
+function getSaveErrorMessage(error: unknown) {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  const lowerMessage = rawMessage.toLowerCase();
+
+  if (lowerMessage.includes("permission") || lowerMessage.includes("insufficient")) {
+    return "주문 저장 권한이 없습니다. Firebase Console에서 Firestore Database 생성 여부와 Rules를 확인하세요.";
+  }
+
+  if (lowerMessage.includes("not-found") || lowerMessage.includes("database")) {
+    return "Firestore Database를 찾을 수 없습니다. Firebase Console에서 Firestore Database를 먼저 생성하세요.";
+  }
+
+  if (lowerMessage.includes("network") || lowerMessage.includes("offline")) {
+    return "네트워크 연결 문제로 주문을 저장하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 눌러주세요.";
+  }
+
+  return `주문 저장에 실패했습니다: ${rawMessage}`;
 }
