@@ -733,6 +733,32 @@ button.danger,
   text-align: right;
 }
 
+.cancel-table {
+  display: grid;
+}
+
+.cancel-table div {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr) 112px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cancel-table div:last-child {
+  border-bottom: 0;
+}
+
+.cancel-table span {
+  min-width: 0;
+  color: var(--muted);
+}
+
+.cancel-table b {
+  text-align: right;
+}
+
 .settings-list {
   display: grid;
   padding: 0 18px 18px;
@@ -944,5 +970,13 @@ button.danger,
 
   .sales-table div {
     grid-template-columns: minmax(0, 1fr) 54px 92px;
+  }
+
+  .cancel-table div {
+    grid-template-columns: 1fr;
+  }
+
+  .cancel-table b {
+    text-align: left;
   }
 }

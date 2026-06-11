@@ -3,10 +3,12 @@ import type { Order } from "../order/orderTypes";
 import { formatMoney } from "../order/orderUtils";
 
 type SalesSummaryProps = {
+  businessDate: string;
   orders: Order[];
+  isClosed: boolean;
 };
 
-export function SalesSummary({ orders }: SalesSummaryProps) {
+export function SalesSummary({ businessDate, orders, isClosed }: SalesSummaryProps) {
   const summary = useMemo(() => {
     const activeOrders = orders.filter((order) => order.status !== "cancelled");
     const completedOrders = activeOrders.filter((order) => order.status === "served");
@@ -23,6 +25,7 @@ export function SalesSummary({ orders }: SalesSummaryProps) {
     const unpaidAmount = activeOrders
       .filter((order) => order.paymentStatus === "unpaid")
       .reduce((total, order) => total + order.totalAmount, 0);
+    const cancelledAmount = cancelledOrders.reduce((total, order) => total + order.totalAmount, 0);
 
     const menuSales = new Map<string, { label: string; quantity: number; revenue: number }>();
     activeOrders.forEach((order) => {
@@ -46,6 +49,7 @@ export function SalesSummary({ orders }: SalesSummaryProps) {
       cardRevenue,
       cashRevenue,
       unpaidAmount,
+      cancelledAmount,
       menuRows: Array.from(menuSales.values()).sort((a, b) => b.revenue - a.revenue),
     };
   }, [orders]);
@@ -54,10 +58,10 @@ export function SalesSummary({ orders }: SalesSummaryProps) {
     <section className="panel summary-panel" aria-labelledby="summary-title">
       <div className="panel-heading">
         <div>
-          <p className="section-label">오늘 요약</p>
+          <p className="section-label">{isClosed ? "영업 마감 리포트" : "오늘 요약"} · {businessDate}</p>
           <h2 id="summary-title">{formatMoney(summary.cardRevenue + summary.cashRevenue)}</h2>
         </div>
-        <span className="status-pill">취소 제외 기준</span>
+        <span className={isClosed ? "status-pill warning" : "status-pill"}>{isClosed ? "마감됨" : "취소 제외 기준"}</span>
       </div>
 
       <div className="metric-grid">
@@ -68,6 +72,7 @@ export function SalesSummary({ orders }: SalesSummaryProps) {
         <Metric label="카드 매출" value={formatMoney(summary.cardRevenue)} />
         <Metric label="현금 매출" value={formatMoney(summary.cashRevenue)} />
         <Metric label="미결제" value={formatMoney(summary.unpaidAmount)} />
+        <Metric label="취소 금액" value={formatMoney(summary.cancelledAmount)} />
       </div>
 
       <div className="table-panel">
@@ -84,6 +89,23 @@ export function SalesSummary({ orders }: SalesSummaryProps) {
           </div>
         ) : (
           <p className="empty-text">아직 집계할 주문이 없습니다.</p>
+        )}
+      </div>
+
+      <div className="table-panel">
+        <h3>취소 내역</h3>
+        {summary.cancelledOrders.length ? (
+          <div className="cancel-table">
+            {summary.cancelledOrders.map((order) => (
+              <div key={order.id}>
+                <strong>{order.orderNo}</strong>
+                <span>{order.items.map((item) => `${item.name} ${item.quantity}`).join(", ")}</span>
+                <b>{formatMoney(order.totalAmount)}</b>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="empty-text">취소된 주문이 없습니다.</p>
         )}
       </div>
     </section>

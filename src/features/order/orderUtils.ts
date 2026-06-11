@@ -13,11 +13,12 @@ export function formatMoney(value: number) {
 }
 
 export function getTodayBusinessDate() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const date = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${date}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 export function createOrderId() {
@@ -29,12 +30,22 @@ export function createOrderId() {
 }
 
 export function getNextOrderNo(orders: Order[]) {
+  const todayPrefix = getOrderNoPrefix(getTodayBusinessDate());
   const maxNo = orders.reduce((max, order) => {
-    const match = order.orderNo.match(/^A-(\d+)$/);
+    const dateMatch = order.orderNo.match(/^\d{4}-(\d+)$/);
+    if (dateMatch) return Math.max(max, Number(dateMatch[1]));
+
+    const legacyMatch = order.orderNo.match(/^A-(\d+)$/);
+    const match = dateMatch ?? legacyMatch;
     return match ? Math.max(max, Number(match[1])) : max;
   }, 0);
 
-  return `A-${String(maxNo + 1).padStart(3, "0")}`;
+  return `${todayPrefix}-${String(maxNo + 1).padStart(3, "0")}`;
+}
+
+export function getOrderNoPrefix(businessDate: string) {
+  const [, month, date] = businessDate.split("-");
+  return `${month}${date}`;
 }
 
 export function elapsedLabel(createdAt: number, now = Date.now()) {

@@ -41,6 +41,9 @@ export default function App() {
   const setIsClosed = (closed: boolean) => {
     setIsClosedState(closed);
     window.localStorage.setItem(closedKey(businessDate), String(closed));
+    if (closed) {
+      setActiveTab("summary");
+    }
   };
 
   return (
@@ -83,7 +86,7 @@ export default function App() {
         </div>
 
         <div className={activeTab === "summary" ? "mobile-panel active" : "mobile-panel"}>
-          <SalesSummary orders={orders} />
+          <SalesSummary businessDate={businessDate} orders={orders} isClosed={isClosed} />
         </div>
 
         <div className={activeTab === "settings" ? "mobile-panel active" : "mobile-panel"}>
