@@ -74,7 +74,7 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, storage
       unitPrice: item.price,
       quantity,
       subtotal: item.price * quantity,
-      note: item.note,
+      ...(item.note ? { note: item.note } : {}),
     }));
 
     const order: Order = {

@@ -51,13 +51,29 @@ export function createFirebaseOrderRepository(): OrderRepository {
       );
     },
     async save(order) {
-      await setDoc(doc(db, "orders", order.id), order);
+      await setDoc(doc(db, "orders", order.id), stripUndefined(order));
     },
     async update(id, patch) {
-      await updateDoc(doc(db, "orders", id), patch);
+      await updateDoc(doc(db, "orders", id), stripUndefined(patch));
     },
     async deleteByIds(ids) {
       await Promise.all(ids.map((id) => deleteDoc(doc(db, "orders", id))));
     },
   };
+}
+
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).flatMap(([key, entry]) =>
+        entry === undefined ? [] : [[key, stripUndefined(entry)]],
+      ),
+    ) as T;
+  }
+
+  return value;
 }
