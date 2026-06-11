@@ -40,6 +40,10 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, storage
 
   const totalAmount = cart.reduce((total, line) => total + line.item.price * line.quantity, 0);
   const nextOrderNo = getNextOrderNo(orders);
+  const quantityByMenuId = useMemo(
+    () => new Map(cart.map((line) => [line.item.id, line.quantity])),
+    [cart],
+  );
 
   const addItem = (item: MenuItem) => {
     setSaveError("");
@@ -134,15 +138,25 @@ export function OrderEntry({ businessDate, orders, isTestMode, isClosed, storage
       </div>
 
       <div className="menu-grid">
-        {filteredMenu.map((item) => (
-          <button key={item.id} className="menu-button" type="button" onClick={() => addItem(item)}>
-            <span className="menu-name">{item.name}</span>
-            <span className="menu-meta">
-              {item.option} · {formatMoney(item.price)}
-            </span>
-            {item.note ? <small>{item.note}</small> : null}
-          </button>
-        ))}
+        {filteredMenu.map((item) => {
+          const selectedQuantity = quantityByMenuId.get(item.id) ?? 0;
+          return (
+            <button
+              key={item.id}
+              className={selectedQuantity ? "menu-button selected" : "menu-button"}
+              type="button"
+              aria-pressed={selectedQuantity > 0}
+              onClick={() => addItem(item)}
+            >
+              {selectedQuantity ? <span className="menu-count">{selectedQuantity}</span> : null}
+              <span className="menu-name">{item.name}</span>
+              <span className="menu-meta">
+                {item.option} · {formatMoney(item.price)}
+              </span>
+              {item.note ? <small>{item.note}</small> : null}
+            </button>
+          );
+        })}
       </div>
 
       <div className="cart-area">

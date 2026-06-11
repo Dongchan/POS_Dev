@@ -245,6 +245,7 @@ button {
 }
 
 .menu-button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -258,8 +259,37 @@ button {
   text-align: left;
 }
 
+.menu-button.selected {
+  border-color: var(--accent);
+  background: #fff2ed;
+  box-shadow: inset 0 0 0 2px rgba(226, 85, 45, 0.18);
+}
+
+.menu-button.selected .menu-name {
+  color: var(--accent-dark);
+}
+
+.menu-button.selected .menu-meta {
+  color: #111827;
+}
+
 .menu-button:active {
   transform: scale(0.99);
+}
+
+.menu-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
 }
 
 .menu-name {
